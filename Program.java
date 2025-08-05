@@ -47,6 +47,7 @@ public class Program {
 		}
 		
 		// initializes starting conditions, the start is always on the top and the next path is always one beneath
+		
 		int startPos = rand.nextInt((maze.length-2) - 1 + 1) + 1;
 		
 		maze[startPos][0].SetCellState("start");
@@ -61,12 +62,15 @@ public class Program {
 		String generateMethod = scanner.nextLine();
 		
 		switch(generateMethod) {
+		case "s":
 		case "spread":
 			SpreadPaths(pathCoords);
 			break;
+		case "b":
 		case "branch":
 			BranchPaths(pathCoords);
 			break;
+		case "g":
 		case "grow":
 			GrowPaths(pathCoords);
 			break;
@@ -253,15 +257,16 @@ public class Program {
  	{
  		ArrayList<int[]> bottomPoints = new ArrayList<int[]>();
  		
- 		for(int i = 1; i < maze.length-2; i++) {
+ 		for(int i = 1; i < maze.length-1; i++) {
  			if(maze[i][maze[0].length-2].GetIsWall() == false) {
  				bottomPoints.add(new int[] {i, maze[0].length-2});
  			}
  		}
  		
  		if(bottomPoints.size() != 0) {
+ 			
  			int finishIndex = rand.nextInt(bottomPoints.size());
- 	 		maze[finishIndex-1][maze[0].length-1].SetCellState("finish");
+ 	 		maze[bottomPoints.get(finishIndex)[0]][maze[0].length-1].SetCellState("finish");
  		} else {
  			System.out.println("maze generation error");
  		}
