@@ -1,4 +1,4 @@
-package mazeGenerator;
+package mazeGeneration;
 
 
 //------IMPORTS---------
@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Main {
+public class Program {
 	
 	static int balls = 0;
 	// Random class object for use in all of Main
@@ -47,8 +47,6 @@ public class Main {
 		}
 		
 		// initializes starting conditions, the start is always on the top and the next path is always one beneath
-		boolean hasEndedCorrectPathCreation = false;
-		
 		int startPos = rand.nextInt((maze.length-2) - 1 + 1) + 1;
 		
 		maze[startPos][0].SetCellState("start");
@@ -56,36 +54,16 @@ public class Main {
 		
 		ArrayList<int[]> pathCoords = new ArrayList<int[]>();
 		
-		pathCoords.add(new int[] {startPos, 0});
 		pathCoords.add(new int[] {startPos, 1});
-		
-		
-		// loops until the path reaches the bottom of the maze 
-		do {
-			
-			// adds random direction to the last position of the path
-			pathCoords.add(GetRandomDirection(pathCoords, pathCoords.size()-1, /*isCorrectPath*/true));
-			maze[pathCoords.getLast()[0]][pathCoords.getLast()[1]].SetCellState("path");
-			
-			// if the path has gotten stuck, re-call the method to re-roll the path
-			if(pathCoords.getLast()[0] == 0 && pathCoords.getLast()[1] == 0) {
-				GenerateMaze(sizeX, sizeY);
-				return;
-				
-			} else if(pathCoords.getLast()[1] == maze[0].length - 1) {
-				
-				hasEndedCorrectPathCreation = true;
-				maze[pathCoords.getLast()[0]][pathCoords.getLast()[1]].SetCellState("finish");
-				
-			}
-				
-		} while(hasEndedCorrectPathCreation == false);
 		
 		// calls specified generation method
 		System.out.print("Enter generation method: ");
 		String generateMethod = scanner.nextLine();
 		
 		switch(generateMethod) {
+		case "spread":
+			SpreadPaths(pathCoords);
+			break;
 		case "branch":
 			BranchPaths(pathCoords);
 			break;
@@ -96,9 +74,44 @@ public class Main {
 			System.out.println("generation method doesn't exist");
 		}
 		
-		
+		SetFinish();
 		PrintMazeResult(maze);
 	}
+ 	
+ 	// evenly spreads paths, going through each current path cell to see if it can branch a path
+ 	private static void SpreadPaths(ArrayList<int[]> pathPoints)
+ 	{
+ 		boolean hasDoneAllChecks;
+ 		ArrayList<int[]> allPathPoints = pathPoints;
+ 		
+ 		do {
+ 			hasDoneAllChecks = true;
+ 			ArrayList<int[]> currentPathPoints = new ArrayList<int[]>();
+				
+ 			for(int i = 0; i < allPathPoints.size(); i++) {
+ 				
+ 				currentPathPoints.add(allPathPoints.get(i));
+ 				
+ 				boolean hasCreatedPath = false;
+ 				do {
+ 					currentPathPoints.add(GetRandomDirection(currentPathPoints, currentPathPoints.size()-1, false));
+ 					if(currentPathPoints.getLast()[0] == 0 && currentPathPoints.getLast()[1] == 0) {
+ 						
+ 						currentPathPoints.remove(currentPathPoints.size()-1);
+ 						hasCreatedPath = true;
+ 						
+ 					} else {
+ 						maze[currentPathPoints.get(currentPathPoints.size()-1)[0]][currentPathPoints.get(currentPathPoints.size()-1)[1]].SetCellState("path");
+ 						hasDoneAllChecks = false;
+ 					}
+ 				} while(hasCreatedPath == false);
+ 			}
+ 			
+ 			for(int[] point: currentPathPoints) {
+ 				allPathPoints.add(point);
+ 			}
+ 		} while(hasDoneAllChecks == false);
+ 	}
  	
  	// places paths around existing paths, evenly spreads out from correct path, creating branching paths automatically
  	private static void GrowPaths(ArrayList<int[]> pathPoints)
@@ -233,6 +246,26 @@ public class Main {
 			} while(directions.size() > 0);
  		
  		return new int[] {0, 0};
+ 	}
+ 	
+ 	// gets finish line after random path creation
+ 	private static void SetFinish()
+ 	{
+ 		ArrayList<int[]> bottomPoints = new ArrayList<int[]>();
+ 		
+ 		for(int i = 1; i < maze.length-2; i++) {
+ 			if(maze[i][maze[0].length-2].GetIsWall() == false) {
+ 				bottomPoints.add(new int[] {i, maze[0].length-2});
+ 			}
+ 		}
+ 		
+ 		if(bottomPoints.size() != 0) {
+ 			int finishIndex = rand.nextInt(bottomPoints.size());
+ 	 		maze[finishIndex-1][maze[0].length-1].SetCellState("finish");
+ 		} else {
+ 			System.out.println("maze generation error");
+ 		}
+ 		
  	}
  	
 	// checks if specified cell is near a path excludes path it came from
